@@ -3,12 +3,14 @@
 #include <ArduinoJson.h>
 
 #define infoPIN 13 //D7
+#define versionPIN 4 //D2
 
-const char* ssid = "WAVE_ROVER"; // Replace with your WiFi SSID
-const char* password = "12345678"; // Replace with your WiFi password
+const char* ssid = "WAVE_ROVER"; 
+const char* password = "12345678"; 
 
 int obstacles;
 int state=0;
+int state1=0;
 unsigned long startTime;
 unsigned long stopStart;
 unsigned long stopEnd;
@@ -16,11 +18,13 @@ unsigned long stopTime;
 unsigned long elapsedTime;
 bool obstacle;
 int obstaclesCounter;
+int version;
 
 WiFiClient wifiClient;
 
 void setup() {
   pinMode(infoPIN, INPUT_PULLUP);
+  pinMode(versionPIN, INPUT_PULLUP);
   Serial.begin(115200);
   WiFi.begin(ssid, password);
 
@@ -49,10 +53,11 @@ void setup() {
 void loop() {
   unsigned long currentTime = millis();
   if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
+  if(digitalRead(versionPIN)==HIGH){version=0;}else{version=1;}
   StaticJsonDocument<200> forwardNormal;
   forwardNormal["T"] = 1;
-  forwardNormal["L"] = 180;
-  forwardNormal["R"] = 180;
+  forwardNormal["L"] = 140;
+  forwardNormal["R"] = 170;
 
   StaticJsonDocument<200> forwardSlow;
   forwardSlow["T"] = 1;
@@ -61,13 +66,19 @@ void loop() {
 
   StaticJsonDocument<200> leftFast;
   leftFast["T"] = 1;
-  leftFast["L"] = -164;
-  leftFast["R"] = 164;
+  leftFast["L"] = -255;
+  leftFast["R"] = 255;
+
+  StaticJsonDocument<200> leftFast1;
+  leftFast1["T"] = 1;
+  leftFast1["L"] = 50;
+  leftFast1["R"] = 220;
 
   StaticJsonDocument<200> leftSlow1;
   leftSlow1["T"] = 1;
-  leftSlow1["L"] = 153;
-  leftSlow1["R"] = 187;
+  leftSlow1["L"] = 90;
+  leftSlow1["R"] = 220;
+  
 
   StaticJsonDocument<200> leftSlow1obs;
   leftSlow1obs["T"] = 1;
@@ -75,68 +86,36 @@ void loop() {
   leftSlow1obs["R"] = 61;
 
   StaticJsonDocument<200> stop;
-  leftSlow1obs["T"] = 1;
-  leftSlow1obs["L"] = 0;
-  leftSlow1obs["R"] = 0;
+  leftSlow1obs["T"] = 0;
 
 
   String jsonStr;
-
-  switch(state){
-    case 0:
-      if(obstacles==0){
-        if (currentTime - startTime < 5000+stopTime){
-          serializeJson(forwardNormal, jsonStr);
+  if(version==0){
+    switch(state){
+      case 0:
+      Serial.println("wtf");
+        if(obstacles==0){
+          if (currentTime - startTime < 10000+stopTime){
+            serializeJson(forwardNormal, jsonStr);
+          }
+          else {
+            startTime = currentTime;
+            stopTime=0;
+            state++;
+          }
         }
-        else {
-          startTime = currentTime;
-          stopTime=0;
-          state++;
-        }
-      }
-      else{
-        stopStart=currentTime;
-        while(obstacles==1){
-          if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
-          serializeJson(stop, jsonStr);
-        }
-        stopEnd=currentTime;
-        stopTime+=stopEnd-stopStart;
-      }
-      break;
-    case 1:
-      if (currentTime - startTime < 2000) { // Zakładamy, że skręt trwa 2 sekundy
-          serializeJson(leftFast, jsonStr);
-        } else {
-          startTime = currentTime;
-          stopTime=0;
-          state++;
+        else{
+          stopStart=currentTime;
+          while(obstacles==1){
+            if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
+            serializeJson(stop, jsonStr);
+          }
+          stopEnd=currentTime;
+          stopTime+=stopEnd-stopStart;
         }
         break;
-    case 2: 
-      if(obstacles==0){
-        if (currentTime - startTime < 4300){
-          serializeJson(forwardNormal, jsonStr);
-        }
-        else {
-          startTime = currentTime;
-          stopTime=0;
-          state++;
-        }
-
-      }
-      else{
-        stopStart=currentTime;
-        while(obstacles==1){
-          if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
-          serializeJson(stop, jsonStr);
-        }
-        stopEnd=currentTime;
-        stopTime+=stopEnd-stopStart;
-      }
-    break;
-    case 3:
-      if (currentTime - startTime < 2000) { // Zakładamy, że skręt trwa 2 sekundy
+      case 1:
+        if (currentTime - startTime < 540) { 
             serializeJson(leftFast, jsonStr);
           } else {
             startTime = currentTime;
@@ -144,88 +123,156 @@ void loop() {
             state++;
           }
           break;
-    case 4:
-      if(obstacles==0){
-        if (currentTime - startTime < 5000+stopTime){
-          serializeJson(forwardNormal, jsonStr);
-        }
-        else {
-          startTime = currentTime;
-          stopTime=0;
-          state++;
-        }
-
-      }
-      else{
-        stopStart=currentTime;
-        while(obstacles==1){
-          if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
-          serializeJson(stop, jsonStr);
-        }
-        stopEnd=currentTime;
-        stopTime+=stopEnd-stopStart;
-      }
-      break;
-    case 5:
-      if(obstacles==0){
-        if (currentTime - startTime < 2000+stopTime) { // Zakładamy, że skręt trwa 2 sekundy
-            serializeJson(leftSlow1, jsonStr);
-          } else {
+      case 2: 
+        if(obstacles==0){
+          if (currentTime - startTime < 8500){
+            serializeJson(forwardNormal, jsonStr);
+          }
+          else {
             startTime = currentTime;
             stopTime=0;
-            state=0;
+            state++;
           }
-      }
-      else{
-        stopStart=currentTime;
-        while(obstacles==1){
-          if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
-          serializeJson(stop, jsonStr);
+
         }
-        stopEnd=currentTime;
-        stopTime+=stopEnd-stopStart;
-      }
-    break;
+        else{
+          stopStart=currentTime;
+          while(obstacles==1){
+            if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
+            serializeJson(stop, jsonStr);
+          }
+          stopEnd=currentTime;
+          stopTime+=stopEnd-stopStart;
+        }
+      break;
+      case 3:
+        if (currentTime - startTime < 540) { 
+              serializeJson(leftFast, jsonStr);
+            } else {
+              startTime = currentTime;
+              stopTime=0;
+              state++;
+            }
+            break;
+      case 4:
+        if(obstacles==0){
+          if (currentTime - startTime < 10000+stopTime){
+            serializeJson(forwardNormal, jsonStr);
+          }
+          else {
+            startTime = currentTime;
+            stopTime=0;
+            state++;
+          }
 
+        }
+        else{
+          stopStart=currentTime;
+          while(obstacles==1){
+            if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
+            serializeJson(stop, jsonStr);
+          }
+          stopEnd=currentTime;
+          stopTime+=stopEnd-stopStart;
+        }
+        break;
+      case 5:
+        if(obstacles==0){
+          if (currentTime - startTime < 17000+stopTime) { 
+              serializeJson(leftSlow1, jsonStr);
+            } else {
+              startTime = currentTime;
+              stopTime=0;
+              state=0;
+            }
+        }
+        else{
+          stopStart=currentTime;
+          while(obstacles==1){
+            if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
+            serializeJson(stop, jsonStr);
+          }
+          stopEnd=currentTime;
+          stopTime+=stopEnd-stopStart;
+        }
+      break;
+
+    }
   }
-
+  if(version==1){
+    switch(state1){
+      case 0:
+      Serial.println("1");
+        if(obstacles==0){
+            if (currentTime - startTime < 22610+stopTime){
+              serializeJson(forwardNormal, jsonStr);
+            }
+            else {
+              startTime = currentTime;
+              stopTime=0;
+              state1++;
+            }
+          }
+          else{
+            stopStart=currentTime;
+            while(obstacles==1){
+              if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
+              serializeJson(stop, jsonStr);
+              
+            }
+            stopEnd=currentTime;
+            stopTime+=stopEnd-stopStart;
+          }
+      break;
+      case 1:
+      Serial.println("2");
+        if(obstacles==0){
+            if (currentTime - startTime < 13050+stopTime) { 
+                serializeJson(leftFast1, jsonStr);
+                Serial.println(jsonStr);
+              } else {
+                startTime = currentTime;
+                stopTime=0;
+                state1=0;
+              }
+          }
+          else{
+            stopStart=currentTime;
+            while(obstacles==1){
+              if(digitalRead(infoPIN)==HIGH){obstacles=1;}else{obstacles=0;}
+              serializeJson(stop, jsonStr);
+            }
+            stopEnd=currentTime;
+            stopTime+=stopEnd-stopStart;
+          }
+      break;
+    }
+  }
 
 
   
 
-  String ip_addr = "192.168.4.1"; // Replace with your IP address
+  String ip_addr = "192.168.4.1"; 
   String url = "http://" + ip_addr + "/js?json=" + jsonStr;
 
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    //Serial.print("Connecting to URL: ");
-    //Serial.println(url);
+    
 
-    http.begin(wifiClient, url); // Use the new begin method
+    http.begin(wifiClient, url);
       
     int httpCode = http.GET();
-    //Serial.print("HTTP response code: ");
-    //Serial.println(httpCode);
+    
 
-    if (httpCode > 0) { // Check for the returning code
+    if (httpCode > 0) { 
       if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
-        //Serial.println(payload);
+        
         } 
-      else {
-        //Serial.print("Error: HTTP response code ");
-        //Serial.println(httpCode);
-      }
+      else {}
     } 
-    else {
-      //Serial.print("Error on HTTP request: ");
-      //Serial.println(http.errorToString(httpCode).c_str());
-    }
-
-    http.end(); // Free the resources
-    } 
-    else {
-    //Serial.println("WiFi not connected");
-  }
-  
+    else {}
+    http.end(); 
+  } 
+  else {} 
 }

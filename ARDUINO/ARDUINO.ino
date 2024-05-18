@@ -82,7 +82,7 @@ void guard(void*){
     rtDelay(50);
   //Serial.println(distance);
 
-    while((distanceLP<=40)){
+    while((distanceLP<=50)){
       xSemaphoreTake(binarySemaphore, portMAX_DELAY);
       digitalWrite(infoPIN, HIGH);
       state=2;
@@ -93,7 +93,7 @@ void guard(void*){
       distanceLP=getDistanceLP();
       xSemaphoreGive(binarySemaphore);
     }
-    while((distancePP<=40)){
+    while((distancePP<=50)){
       xSemaphoreTake(binarySemaphore, portMAX_DELAY);
       digitalWrite(infoPIN, HIGH);
       state=2;
@@ -104,7 +104,7 @@ void guard(void*){
       distancePP=getDistancePP();
       xSemaphoreGive(binarySemaphore);
     }
-    while((distanceP<=40)){
+    while((distanceP<=50)){
       xSemaphoreTake(binarySemaphore, portMAX_DELAY);
       digitalWrite(infoPIN, HIGH);
       state=2;
@@ -115,7 +115,7 @@ void guard(void*){
       distanceP=getDistanceP();
       xSemaphoreGive(binarySemaphore);
     }
-    while((distanceL<=20)){
+    while((distanceL<=30)){
       xSemaphoreTake(binarySemaphore, portMAX_DELAY);
       digitalWrite(infoPIN, HIGH);
       state=2;
